@@ -1,0 +1,6 @@
+.env
+tasks/__pycache__/
+*.pyc
+db.sqlite3
+media/
+temp_audio.mp3
