@@ -25,26 +25,30 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
             set -e
             cd ~/assignmate || exit 1
-
+      
             echo "Fetching latest code..."
             git fetch origin
             git reset --hard origin/main
-
+      
             echo "Activating venv..."
             source venv/bin/activate
-
-            echo "Installing requirements..."
-            pip install -r requirements.txt
-
+      
+            echo "Upgrading build tools..."
+            pip install --upgrade pip
+            pip install setuptools==68.2.2 wheel==0.41.3
+      
+            echo "Installing requirements (no build isolation)..."
+            pip install --no-build-isolation -r requirements.txt
+      
             echo "Running migrations..."
-            python manage.py migrate
-
+            python manage.py migrate --noinput
+      
             echo "Collecting static files..."
             python manage.py collectstatic --noinput
-
+      
             echo "Restarting services..."
             sudo systemctl restart gunicorn
             sudo systemctl restart nginx
-
+      
             echo "Deploy completed successfully."
           EOF
