@@ -10,41 +10,41 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup SSH
-      run: |
-        mkdir -p ~/.ssh
-        echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_ed25519
-        chmod 600 ~/.ssh/id_ed25519
-        ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
-        - name: Deploy to EC2
-      run: |
-        ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-          set -e
-          cd ~/assignmate || exit 1
+      - name: Deploy to EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            set -e
+            cd ~/assignmate || exit 1
 
-          echo "Fetching latest code..."
-          git fetch origin
-          git reset --hard origin/main
+            echo "Fetching latest code..."
+            git fetch origin
+            git reset --hard origin/main
 
-          echo "Activating venv..."
-          source venv/bin/activate
+            echo "Activating venv..."
+            source venv/bin/activate
 
-          echo "Installing requirements..."
-          pip install -r requirements.txt
+            echo "Installing requirements..."
+            pip install -r requirements.txt
 
-          echo "Running migrations..."
-          python manage.py migrate
+            echo "Running migrations..."
+            python manage.py migrate
 
-          echo "Collecting static files..."
-          python manage.py collectstatic --noinput
+            echo "Collecting static files..."
+            python manage.py collectstatic --noinput
 
-          echo "Restarting services..."
-          sudo systemctl restart gunicorn
-          sudo systemctl restart nginx
+            echo "Restarting services..."
+            sudo systemctl restart gunicorn
+            sudo systemctl restart nginx
 
-          echo "Deploy completed successfully."
-        EOF
+            echo "Deploy completed successfully."
+          EOF
